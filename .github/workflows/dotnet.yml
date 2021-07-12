@@ -6,42 +6,54 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  AZURE_WEBAPP_NAME: apmm    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '3.1.x'  
+  
 jobs:
   build:
 
     runs-on: windows-latest
 
     steps:
+    # Checkout the repo
     - uses: actions/checkout@v2
     
-    - name: Setup .NET
+    # Setup .NET Core SDK
+    - name: Setup .NET core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.301'
-      
-    - name: Build
-      run: dotnet build --configuration Release   
-      
+        dotnet-version: ${{ env.DOTNET_VERSION }} 
+     
+    # Run dotnet build and publish 
+    - name: dotnet build and publish
+      run: |
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet publish -c Release -o '${{ env.DOTNET_ROOT }}/myapp' 
+    
+    # Edit and publish the code coverage results 
     - name: Edit and Publish Code coverage results
       run: |
         cd ./AzureEventHubs.UnitTests/
         dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov        
    
+    # Upload artifacts for code covergae result
     - name: Upload artifact for coverage result
       uses: actions/upload-artifact@v2
       with:
         name: coverage
         path: ./AzureEventHubs.UnitTests/TestResults/coverage.info     
-        
+    
+    # Publish coverage reports to coveralls.io
     - name: Publish coverage report to coveralls.io
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: ./AzureEventHubs.UnitTests/TestResults/coverage.info            
-      
-    - name: dotnet publish
-      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
+    
+    # Upload artifacts for deployment job
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v2
       with:
@@ -60,13 +72,14 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: .net-app
-
+        
+    # Deploy to Azure Web apps
     - name: Deploy to Azure Web App
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'apmm'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_9a3089d32f46457ba1d565d8a225158f }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .   
 
