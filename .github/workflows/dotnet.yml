@@ -20,29 +20,24 @@ jobs:
         dotnet-version: '3.1.301'
       
     - name: Build
-      run: dotnet build --configuration Release
-      
-    - name: Run Test and Coverage 
-      run: dotnet test --collect "Code Coverage"
-      
-    - name: Upload artifact for coverage result
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage
-        path: ./    
-
+      run: dotnet build --configuration Release   
       
     - name: Edit and Publish Code coverage results
       run: |
         cd ./AzureEventHubs.UnitTests/
-        dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+        dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov        
+   
+    - name: Upload artifact for coverage result
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: ./AzureEventHubs.UnitTests/TestResults/coverage.info     
         
     - name: Publish coverage report to coveralls.io
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./AzureEventHubs.UnitTests/TestResults/coverage.info     
-        
+        path-to-lcov: ./AzureEventHubs.UnitTests/TestResults/coverage.info            
       
     - name: dotnet publish
       run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
