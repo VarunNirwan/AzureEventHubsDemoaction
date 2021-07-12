@@ -25,7 +25,13 @@ jobs:
     - name: Test
       run: dotnet test --collect "Code Coverage"
       
-    - uses: romeovs/lcov-reporter-action@v0.2.16
+    - name: dotnet publish
+      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+    - name: Upload artifact for deployment job
+      uses: actions/upload-artifact@v2
       with:
-        lcov-file: ./coverage/lcov.info
+        name: .net-app
+        path: ${{env.DOTNET_ROOT}}/myapp
+
 
