@@ -22,7 +22,17 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release
       
-    - name: Test
+    - name: Run Test and Coverage 
+      run: dotnet test --collect "Code Coverage"
+      
+    - name: Upload artifact for coverage result
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: ./    
+
+      
+    - name: Edit and Publish Code coverage results
       run: |
         cd ./AzureEventHubs.UnitTests/
         dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
@@ -42,5 +52,6 @@ jobs:
       with:
         name: .net-app
         path: ${{env.DOTNET_ROOT}}/myapp
-
+        
+    
 
