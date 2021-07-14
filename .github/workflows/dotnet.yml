@@ -19,9 +19,6 @@ jobs:
     steps:
     # Checkout the repo vv
     - uses: actions/checkout@v2
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
     
     # Setup .NET Core SDK
     - name: Setup .NET core
@@ -77,6 +74,11 @@ jobs:
         name: .net-app
         
     # Deploy to Azure Web apps
+    - name : Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
     - name: Deploy to Azure Web App
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
@@ -85,4 +87,7 @@ jobs:
         slot-name: 'production'
         #publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .   
-
+         
+    - name: logout
+      run: |
+          az logout
